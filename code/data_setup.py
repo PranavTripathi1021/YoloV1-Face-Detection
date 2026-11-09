@@ -95,7 +95,8 @@ def collate_fn(batch):
     )
 
 
-NUM_WORKERS = 4
+NUM_WORKERS = 4 # Consider changing it if problem arises
+
 def create_dataloaders(
         train_dir:str|Path,
         val_dir:str|Path,
@@ -105,7 +106,8 @@ def create_dataloaders(
         val_label_dir:str|Path|None = None,
         labels2_dir:str|Path|None = None,
         is_yolo:bool = False,
-        transform:A.Compose|None = None,
+        transform_train:A.Compose|None = None,
+        transform_val:A.Compose|None = None,
         num_workers:int = NUM_WORKERS,
         train_shuffle:bool = True,
         val_shuffle:bool = False
@@ -115,26 +117,26 @@ def create_dataloaders(
             image_dir=train_dir,
             label_dir=labels2_dir,
             is_yolo=is_yolo,
-            transform=transform
+            transform=transform_train
         )
         val_data = faceRecoDataset(
             image_dir=val_dir,
             label_dir=labels2_dir,
             is_yolo=is_yolo,
-            transform=transform
+            transform=transform_val
         )
     else:
         train_data = faceRecoDataset(
             image_dir=train_dir,
             label_dir=train_label_dir,
             is_yolo=is_yolo,
-            transform=transform
+            transform=transform_train
         )
         val_data = faceRecoDataset(
             image_dir=val_dir,
             label_dir=val_label_dir,
             is_yolo=is_yolo,
-            transform=transform
+            transform=transform_val
         )
     train_loader = DataLoader(
         dataset=train_data,
@@ -143,8 +145,8 @@ def create_dataloaders(
         num_workers=num_workers,
         pin_memory=True,
         collate_fn=collate_fn,
-        persistent_workers=(NUM_WORKERS >0),
-        prefetch_factor=2 if NUM_WORKERS>0 else None
+        persistent_workers=(num_workers >0),
+        prefetch_factor=2 if num_workers>0 else None
     )
     test_loader = DataLoader(
         dataset=val_data,
@@ -153,7 +155,7 @@ def create_dataloaders(
         num_workers=num_workers,
         pin_memory=True,
         collate_fn=collate_fn,
-        persistent_workers=(NUM_WORKERS >0),
-        prefetch_factor=2 if NUM_WORKERS>0 else None
+        persistent_workers=(num_workers >0),
+        prefetch_factor=2 if num_workers>0 else None
     )
     return train_loader, test_loader

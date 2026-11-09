@@ -1,7 +1,6 @@
 import os
-# Helps to increase batch size
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # Used to get higher memory in GPU
-os.environ["NO_ALBUMENTATIONS_UPDATE"] = "1"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+os.environ["NO_ALBUMENTATIONS_UPDATE"] = "1" # Used to ignore update messages by albumentations
 import torch
 from data_setup import create_dataloaders
 import model_builder
@@ -22,7 +21,7 @@ LEARNING_RATE = 5e-6
 WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
 VELOCITY = 0.999
-transform = A.Compose([
+transform_train = A.Compose([
     A.Resize(448, 448),
     A.HorizontalFlip(0.5),
     A.Affine(
@@ -45,6 +44,17 @@ transform = A.Compose([
     label_fields=['class_labels'],
     clip=True
 ))
+
+transform_val = A.Compose([
+    A.Resize(448, 448),
+    A.Normalize(mean=(0, 0, 0), std=(1, 1, 1)),
+    ToTensorV2()
+], bbox_params=A.BboxParams(
+    format='yolo',
+    label_fields=['class_labels'],
+    clip=True
+))
+
 scaler = torch.amp.GradScaler("cuda", enabled=(device.type == 'cuda'))
 
 
@@ -63,6 +73,10 @@ def save_checkpoint(model, optimizer, epoch, loss, scheduler, scaler, path="../m
 
 
 def train_fn(train_loader, model, loss_fn, optimizer, scaler):
+    """
+    This function trains the model.
+    It prints mean total loss and individual losses (box_loss, object_loss, noobject_loss, class_loss)
+    """
     model.train()
     loop = tqdm(train_loader, leave=True)
     total_loss = torch.zeros((), device=device)
@@ -90,9 +104,13 @@ def train_fn(train_loader, model, loss_fn, optimizer, scaler):
         del loss, output
     epoch_loss = total_loss/total_samples
     total_individual_losses = total_individual_losses/total_samples
-    print(f"\nMean loss was {epoch_loss.item():.5f}\nLast individual losses are - {total_individual_losses.tolist()}\n")
+    print(f"\nMean loss was {epoch_loss.item():.5f}\nIndividual losses are - {total_individual_losses.tolist()}\n")
 
 def val_fn(val_loader, model, loss_fn, scheduler):
+    """
+    This function evaluates the model after each epoch.
+    It prints mean total loss and individual losses (box_loss, object_loss, noobject_loss, class_loss)
+    """
     model.eval()
     total_loss = torch.zeros((), device=device)
     total_individual_loss = torch.zeros((4), device=device)
@@ -118,6 +136,7 @@ def val_fn(val_loader, model, loss_fn, scheduler):
 
 
 def main():
+    ################# Network setup #################
     model = model_builder.YoloV1_model(
         split_size=S,
         num_boxes=B,
@@ -149,8 +168,9 @@ def main():
     else:
         START_EPOCH = 0
         print("No checkpoint found. Starting from scratch.")
-
     loss_fn = YoloV1Loss(S, B, C)
+
+    ################# Data Loading #################
     train_dataloader, val_dataloader = create_dataloaders(
         train_dir=data_path/'images/train',
         val_dir=data_path/'images/val',
@@ -161,8 +181,11 @@ def main():
         train_shuffle=True,
         val_shuffle=False,
         is_yolo=True,
-        transform=transform
+        transform_train=transform_train,
+        transform_val=transform_val
     )
+
+    ################# Running #################
     for epoch in range(START_EPOCH, EPOCHES):
         print(f"Epoch {epoch + 1}\n--------------------------------------\n")
         train_fn(train_dataloader, model, loss_fn, optimizer, scaler)

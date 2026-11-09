@@ -22,7 +22,7 @@ This project implements a custom yolov1 architecture and detects faces from cam 
 - For model devleopment
 
 ```bash
-  git clone YOUR_REPOSITORY_URL
+  git clone https://github.com/PranavTripathi1021/YoloV1-Face-Detection
   cd Face-Detection
   python -m venv .venv
   source .venv/bin/activate
@@ -70,7 +70,7 @@ Bounding-box predictions are decoded and filtered using confidence thresholding 
 Datasets used for training and validation are
     - https://www.kaggle.com/datasets/fareselmenshawii/face-detection-dataset
     - https://www.kaggle.com/datasets/nguyenquocdungk16hl/bg-20o 
-    I used the second datasets 1/testval to reduce false positves 
+    I used the second datasets 1/testval to reduce false positves. Move the downloaded images to training folder
 
 ### Training Pipeline
 
@@ -144,6 +144,8 @@ A C++ application is developed using
 
 ## Project Structure
 
+The directories of should be made as such or the paths in code should be modified
+
 ```text
 ├── app/
 │   ├── model/                # Core C++ application models / logic
@@ -171,6 +173,15 @@ A C++ application is developed using
 ├── requirements.txt          # Python packages and project dependencies
 └── test.py                   # Main Python entry point for quick testing/inference
 ```
+
+## Limitations
+
+- Single Class detection - The model is trained to recognise only faces.
+- Grid-cell limitations - The 7×7 grid-based target representation discards multiple faces assigned to the same grid cell during target generation.
+- Threshold sensitivity - Detection results depend on the confidence threshold and NMS threshold, which influence the precision and recall trade-off.
+- Small faces: Detecting very small or distant faces may be challenging due to the model's input resolution and grid-based architecture.
+
+
 ## Author
 
 [Pranav Tripathi](https://github.com/PranavTripathi1021)\

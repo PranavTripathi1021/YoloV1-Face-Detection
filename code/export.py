@@ -9,7 +9,7 @@ model.load_state_dict(torch.load("../model/Epoch-86.pth", map_location=torch.dev
 model.eval()  # Set the model to evaluation mode
 
 # 3. Create a dummy input tensor matching your model's expected input shape
-example_input = torch.rand(1, 3, 446, 446)  # Adjust dimensions to match your model
+example_input = torch.rand(1, 3, 448, 448)  # Adjust dimensions to match your model
 
 # 4. Trace the model
 traced_model = torch.jit.trace(model, example_input)

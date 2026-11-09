@@ -1,15 +1,26 @@
 #include<iostream>
 #include<opencv2/opencv.hpp>
-#include<opencv2/dnn.hpp>
 #include<torch/script.h>
 #include<torch/cuda.h>
 #include<vector>
-#include<algorithm>
 #include "functions.hpp"
 
+/*
+If you are going to use cuda make sure your torch and cuda toolkit versions support each other.
+
+If you are getting a error like 
+Invalid handle. Cannot load symbol cudnnGetVersion
+Aborted (core dumped)
+
+Install cudnn cuda toolkit doesn't contain it
+*/
+
+// Make Sure these are the same on which model is trained
 static int S = 7;
 static int B = 2;
 static int C = 1;
+
+// Hyper Paramenters
 float CONF_THRESHOLD = 0.15;
 float NMS_THRESHOLD = 0.30;
 
@@ -45,8 +56,10 @@ int main(){
     while(video.isOpened()){
         cv::Mat frame;
         bool succ = video.read(frame);
-        if (!succ || frame.empty()) break;
-
+        if (!succ || frame.empty()){
+            std::cout<<"Couldn't read the webcam.";
+            break;
+        }
 
         torch::Tensor img_tensor = imgToTensor(frame);
         img_tensor = img_tensor.to(device);
