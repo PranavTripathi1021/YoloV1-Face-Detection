@@ -38,6 +38,7 @@ This project implements a custom yolov1 architecture and detects faces from cam 
       Install libtorch following - https://pytorch.org/get-started/locally
       To install cuda toolkit - https://developer.nvidia.com/cuda-downloads
       To install cuDNN - https://developer.nvidia.com/cudnn-downloads
+      To download trained model - https://huggingface.co/SilverHorn1021/YoloV1-Face-Detection/tree/main
 
       Make sure your libtorch version supports the cuda and cuDNN versions
       Configure the cmake presets according to your cuda paths
